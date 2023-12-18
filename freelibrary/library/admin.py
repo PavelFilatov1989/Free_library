@@ -4,12 +4,16 @@ from .models import Library, Category
 
 @admin.register(Library)
 class LibraryAdmin(admin.ModelAdmin):
+    prepopulated_fields = {'slug': ('book', )}
+    filter_horizontal = ['tags']
     list_display = ('author', 'book', 'time_create', 'is_published', 'cat', 'brief_info')
     list_display_links = ('author', 'book')
     ordering = ['time_create', 'author']
     list_editable = ('is_published',)
     list_per_page = 6
     actions = ['set_published', 'set_draft']
+    search_fields = ['author', 'cat__name']
+    list_filter = ['cat__name', 'is_published']
 
     @admin.display(description='Краткое описание', ordering='content')
     def brief_info(self, book: Library):
