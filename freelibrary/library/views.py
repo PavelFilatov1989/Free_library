@@ -2,6 +2,7 @@ from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 
+from .forms import AddBookForm
 from .models import Library, Category, TagPost
 
 menu = [{'title': "о библиотеке", 'url_name': 'about'},
@@ -31,7 +32,18 @@ def about(request):
     return render(request, 'library/about.html', context=data)
 
 def add_book(request):
-    return HttpResponse("Добавить книгу")
+    if request.method == 'POST':
+        form = AddBookForm(request.POST)
+        if form.is_valid():
+            print(form.cleaned_data)
+    else:
+        form = AddBookForm()
+    data = {
+        'title': 'Добавление книги',
+        'menu': menu,
+        'form': form,
+    }
+    return render(request, 'library/add_book.html', context=data)
 
 def search(request):
     return HttpResponse("Искать книгу")
