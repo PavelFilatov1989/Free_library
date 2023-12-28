@@ -2,8 +2,8 @@ from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 
-from .forms import AddBookForm
-from .models import Library, Category, TagPost
+from .forms import AddBookForm, UploadFileForm
+from .models import Library, Category, TagPost, UploadFiles
 
 menu = [{'title': "о библиотеке", 'url_name': 'about'},
         {'title': "добавить книгу", 'url_name': 'add_book'},
@@ -25,17 +25,26 @@ def index(request):
     return render(request, 'library/index.html', context=data)
 
 def about(request):
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            fp = UploadFiles(file=form.cleaned_data['file'])
+            fp.save()
+    else:
+        form = UploadFileForm()
     data = {
         'title': 'О библиотеке',
         'menu': menu,
+        'form': form
     }
     return render(request, 'library/about.html', context=data)
 
 def add_book(request):
     if request.method == 'POST':
-        form = AddBookForm(request.POST)
+        form = AddBookForm(request.POST, request.FILES)
         if form.is_valid():
-            print(form.cleaned_data)
+            form.save()
+            return redirect('home')
     else:
         form = AddBookForm()
     data = {
