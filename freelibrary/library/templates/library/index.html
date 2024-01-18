@@ -8,6 +8,9 @@
                 <p class="first">Категория: {{b.cat.name}}</p>
                 <p class="last">Дата: {{b.time_update|date:"d-m-Y H:i:s"}}</p>
             </div>
+            {% if b.photo %}
+                   <p ><img class="img-article-left thumb" src="{{b.photo.url}}"></p>
+            {% endif %}
             <h2>{{ b.book }}</h2>
             <h3>{{ b.author }}</h3>
             <p>{{ b.content }}</p>
