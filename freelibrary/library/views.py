@@ -5,7 +5,7 @@ from django.template.loader import render_to_string
 from .forms import AddBookForm, UploadFileForm
 from .models import Library, Category, TagPost, UploadFiles
 from django.views import View
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, ListView
 
 menu = [{'title': "о библиотеке", 'url_name': 'about'},
         {'title': "добавить книгу", 'url_name': 'add_book'},
@@ -15,26 +15,37 @@ menu = [{'title': "о библиотеке", 'url_name': 'about'},
 ]
 
 
-def index(request):
-    books = Library.published.all().select_related('cat')
+# def index(request):
+#     books = Library.published.all().select_related('cat')
+#
+#     data = {
+#         'title': 'Главная страница',
+#         'menu': menu,
+#         'books': books,
+#         'cat_selected': 0,
+#     }
+#     return render(request, 'library/index.html', context=data)
 
-    data = {
-        'title': 'Главная страница',
-        'menu': menu,
-        'books': books,
-        'cat_selected': 0,
-    }
-    return render(request, 'library/index.html', context=data)
 
-
-class LibraryHome(TemplateView):
+class LibraryHome(ListView):
+    model = Library
     template_name = 'library/index.html'
+    context_object_name = 'books'
     extra_context = {
         'title': 'Главная страница',
         'menu': menu,
-        'books': Library.published.all().select_related('cat'),
         'cat_selected': 0,
     }
+
+    def get_queryset(self):
+        return Library.published.all().select_related('cat')
+
+    # extra_context = {
+    #     'title': 'Главная страница',
+    #     'menu': menu,
+    #     'books': Library.published.all().select_related('cat'),
+    #     'cat_selected': 0,
+    # }
 
 
 def about(request):
@@ -52,20 +63,20 @@ def about(request):
     }
     return render(request, 'library/about.html', context=data)
 
-def add_book(request):
-    if request.method == 'POST':
-        form = AddBookForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect('home')
-    else:
-        form = AddBookForm()
-    data = {
-        'title': 'Добавление книги',
-        'menu': menu,
-        'form': form,
-    }
-    return render(request, 'library/add_book.html', context=data)
+# def add_book(request):
+#     if request.method == 'POST':
+#         form = AddBookForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             form.save()
+#             return redirect('home')
+#     else:
+#         form = AddBookForm()
+#     data = {
+#         'title': 'Добавление книги',
+#         'menu': menu,
+#         'form': form,
+#     }
+#     return render(request, 'library/add_book.html', context=data)
 
 
 class AddBook(View):
@@ -120,6 +131,23 @@ def show_category(request, cat_slug):
         'cat_selected': category.pk,
     }
     return render(request, 'library/index.html', context=data)
+
+
+class LibraryCategory(ListView):
+    template_name = 'library/index.html'
+    context_object_name = 'books'
+    allow_empty = False
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cat = context['books'][0].cat
+        context['title'] = 'Категория - ' + cat.name
+        context['menu'] = menu
+        context['cat_selected'] = cat.id
+        return context
+
+    def get_queryset(self):
+        return Library.published.filter(cat__slug=self.kwargs['cat_slug']).select_related('cat')
 
 
 def show_tag_booklist(request, tag_slug):
