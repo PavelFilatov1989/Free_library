@@ -4,6 +4,8 @@ from django.template.loader import render_to_string
 
 from .forms import AddBookForm, UploadFileForm
 from .models import Library, Category, TagPost, UploadFiles
+from django.views import View
+from django.views.generic import TemplateView
 
 menu = [{'title': "о библиотеке", 'url_name': 'about'},
         {'title': "добавить книгу", 'url_name': 'add_book'},
@@ -23,6 +25,17 @@ def index(request):
         'cat_selected': 0,
     }
     return render(request, 'library/index.html', context=data)
+
+
+class LibraryHome(TemplateView):
+    template_name = 'library/index.html'
+    extra_context = {
+        'title': 'Главная страница',
+        'menu': menu,
+        'books': Library.published.all().select_related('cat'),
+        'cat_selected': 0,
+    }
+
 
 def about(request):
     if request.method == 'POST':
@@ -53,6 +66,30 @@ def add_book(request):
         'form': form,
     }
     return render(request, 'library/add_book.html', context=data)
+
+
+class AddBook(View):
+    def get(self, request):
+        form = AddBookForm()
+        data = {
+            'title': 'Добавление книги',
+            'menu': menu,
+            'form': form,
+        }
+        return render(request, 'library/add_book.html', context=data)
+
+    def post(self, request):
+        form = AddBookForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+        data = {
+            'title': 'Добавление книги',
+            'menu': menu,
+            'form': form,
+        }
+        return render(request, 'library/add_book.html', context=data)
+
 
 def search(request):
     return HttpResponse("Искать книгу")
