@@ -5,7 +5,7 @@ from django.template.loader import render_to_string
 from .forms import AddBookForm, UploadFileForm
 from .models import Library, Category, TagPost, UploadFiles
 from django.views import View
-from django.views.generic import TemplateView, ListView
+from django.views.generic import TemplateView, ListView, DetailView
 
 menu = [{'title': "о библиотеке", 'url_name': 'about'},
         {'title': "добавить книгу", 'url_name': 'add_book'},
@@ -121,16 +121,32 @@ def show_book(request, book_slug):
     }
     return render(request, 'library/book.html', context=data)
 
-def show_category(request, cat_slug):
-    category = get_object_or_404(Category, slug=cat_slug)
-    books = Library.published.filter(cat_id=category.pk).select_related('cat')
-    data = {
-        'title': f'Жанр: {category.name}',
-        'menu': menu,
-        'books': books,
-        'cat_selected': category.pk,
-    }
-    return render(request, 'library/index.html', context=data)
+class ShowBook(DetailView):
+    #model = Library
+    template_name = 'library/book.html'
+    slug_url_kwarg = 'book_slug'
+    context_object_name = 'book'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = context['book']
+        context['menu'] = menu
+        return context
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Library.published, slug=self.kwargs[self.slug_url_kwarg])
+
+
+# def show_category(request, cat_slug):
+#     category = get_object_or_404(Category, slug=cat_slug)
+#     books = Library.published.filter(cat_id=category.pk).select_related('cat')
+#     data = {
+#         'title': f'Жанр: {category.name}',
+#         'menu': menu,
+#         'books': books,
+#         'cat_selected': category.pk,
+#     }
+#     return render(request, 'library/index.html', context=data)
 
 
 class LibraryCategory(ListView):
@@ -150,16 +166,33 @@ class LibraryCategory(ListView):
         return Library.published.filter(cat__slug=self.kwargs['cat_slug']).select_related('cat')
 
 
-def show_tag_booklist(request, tag_slug):
-    tag = get_object_or_404(TagPost, slug=tag_slug)
-    books = tag.tags.filter(is_published=Library.Status.PUBLISHED).select_related('cat')
-    data = {
-        'title': f'Тег: {tag.tag}',
-        'menu': menu,
-        'books': books,
-        'cat_selected': None,
-    }
-    return render(request, 'library/index.html', context=data)
+# def show_tag_booklist(request, tag_slug):
+#     tag = get_object_or_404(TagPost, slug=tag_slug)
+#     books = tag.tags.filter(is_published=Library.Status.PUBLISHED).select_related('cat')
+#     data = {
+#         'title': f'Тег: {tag.tag}',
+#         'menu': menu,
+#         'books': books,
+#         'cat_selected': None,
+#     }
+#     return render(request, 'library/index.html', context=data)
+
+
+class TagBookList(ListView):
+    template_name = 'library/index.html'
+    context_object_name = 'books'
+    allow_empty = False
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tag = TagPost.objects.get(slug=self.kwargs['tag_slug'])
+        context['title'] = 'Тег: ' + tag.tag
+        context['menu'] = menu
+        context['cat_selected'] = None
+        return context
+
+    def get_queryset(self):
+        return Library.published.filter(tags__slug=self.kwargs['tag_slug']).select_related('cat')
 
 
 def page_not_found(request, exception):
