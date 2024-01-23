@@ -5,6 +5,7 @@ urlpatterns = [
     path('', views.LibraryHome.as_view(), name='home'),
     path('about/', views.about, name='about'),
     path('addbook/', views.AddBook.as_view(), name='add_book'),
+    path('edit/<int:pk>/', views.UpdatePage.as_view(), name='edit_page'),
     path('search/', views.search, name='search'),
     path('contact/', views.contact, name='contact'),
     path('login/', views.login, name='login'),

@@ -1,11 +1,12 @@
 from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
+from django.urls import reverse, reverse_lazy
 
 from .forms import AddBookForm, UploadFileForm
 from .models import Library, Category, TagPost, UploadFiles
 from django.views import View
-from django.views.generic import TemplateView, ListView, DetailView
+from django.views.generic import TemplateView, ListView, DetailView, FormView, CreateView, UpdateView
 
 menu = [{'title': "о библиотеке", 'url_name': 'about'},
         {'title': "добавить книгу", 'url_name': 'add_book'},
@@ -78,28 +79,47 @@ def about(request):
 #     }
 #     return render(request, 'library/add_book.html', context=data)
 
+class AddBook(CreateView):
+    form_class = AddBookForm
+    template_name = 'library/add_book.html'
+    success_url = reverse_lazy('home')
+    extra_context = {
+        'menu': menu,
+        'title': 'Добавление книги',
+    }
 
-class AddBook(View):
-    def get(self, request):
-        form = AddBookForm()
-        data = {
-            'title': 'Добавление книги',
-            'menu': menu,
-            'form': form,
-        }
-        return render(request, 'library/add_book.html', context=data)
+class UpdatePage(UpdateView):
+    model = Library
+    fields = '__all__'
+    template_name = 'library/add_book.html'
+    success_url = reverse_lazy('home')
+    extra_context = {
+        'menu': menu,
+        'title': 'Редактирование книги',
+    }
 
-    def post(self, request):
-        form = AddBookForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect('home')
-        data = {
-            'title': 'Добавление книги',
-            'menu': menu,
-            'form': form,
-        }
-        return render(request, 'library/add_book.html', context=data)
+
+# class AddBook(View):
+#     def get(self, request):
+#         form = AddBookForm()
+#         data = {
+#             'title': 'Добавление книги',
+#             'menu': menu,
+#             'form': form,
+#         }
+#         return render(request, 'library/add_book.html', context=data)
+#
+#     def post(self, request):
+#         form = AddBookForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             form.save()
+#             return redirect('home')
+#         data = {
+#             'title': 'Добавление книги',
+#             'menu': menu,
+#             'form': form,
+#         }
+#         return render(request, 'library/add_book.html', context=data)
 
 
 def search(request):
