@@ -17,6 +17,7 @@ class LibraryHome(DataMixin, ListView):
     title_page = 'Главная страница'
     cat_selected = 0
 
+
     def get_queryset(self):
         return Library.published.all().select_related('cat')
 
@@ -79,6 +80,7 @@ class LibraryCategory(DataMixin, ListView):
     template_name = 'library/index.html'
     context_object_name = 'books'
     allow_empty = False
+
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
