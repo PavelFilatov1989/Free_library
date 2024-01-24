@@ -4,7 +4,13 @@ from django.db.models import Count
 
 from library.models import Category, TagPost
 
+from library.utils import menu
+
 register = template.Library()
+
+@register.simple_tag
+def get_menu():
+    return menu
 
 @register.inclusion_tag('library/list_categories.html')
 def show_categories(cat_selected=0):
