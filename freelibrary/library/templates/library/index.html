@@ -5,7 +5,7 @@
         {% for b in books %}
          <li>
             <div class="article-panel">
-                <p class="first">Категория: {{b.cat.name}}</p>
+                <p class="first">Категория: {{b.cat.name}} | автор: {{p.author_add.username|default:"неизвестен"}}</p>
                 <p class="last">Дата: {{b.time_update|date:"d-m-Y H:i:s"}}</p>
             </div>
             {% if b.photo %}

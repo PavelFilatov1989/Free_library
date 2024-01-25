@@ -1,3 +1,5 @@
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
@@ -22,7 +24,7 @@ class LibraryHome(DataMixin, ListView):
         return Library.published.all().select_related('cat')
 
 
-
+@login_required
 def about(request):
     if request.method == 'POST':
         form = UploadFileForm(request.POST, request.FILES)
@@ -39,10 +41,15 @@ def about(request):
     return render(request, 'library/about.html', context=data)
 
 
-class AddBook(DataMixin, CreateView):
+class AddBook(LoginRequiredMixin, DataMixin, CreateView):
     form_class = AddBookForm
     template_name = 'library/add_book.html'
     title_page = 'Добавление книги'
+
+    def form_valid(self, form):
+        w = form.save(commit=False)
+        w.author_add = self.request.user
+        return super().form_valid(form)
 
 
 class UpdatePage(DataMixin, UpdateView):
